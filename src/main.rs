@@ -22,6 +22,7 @@ use ckb_hash::{blake2b_256, new_blake2b};
 
 
 use faster_hex::{hex_decode};
+use ckb_types::packed::CellDep;
 
 
 const SIGNATURE_SIZE: usize = 65;
@@ -86,12 +87,14 @@ pub fn get_tx(price:&f64) -> packed::Transaction {
     // outputs_data: the price of ckb
     let mut outputs_data: Vec<Bytes> = vec![Bytes::from(price.to_string())];
 
-
+    let secp256_dep: packed::CellDep = CellDep::default();
+    
     // build transaction
     let tx = TransactionBuilder::default()
         .inputs(inputs)
         .outputs(outputs)
         .outputs_data(outputs_data.pack())
+        .cell_dep(secp256_dep)
         .build();
 
     // import private key for Privkey
@@ -158,7 +161,7 @@ pub fn sign_tx(tx: ckb_types::core::TransactionView, key: &Privkey) -> Transacti
 pub fn gen_lockscript(lock_args: H160) -> packed::Script {
     packed::Script::new_builder()
         .code_hash(SIGHASH_TYPE_HASH.pack())
-        .hash_type(ScriptHashType::Type.into())
+        .hash_type(ScriptHashType::Data.into())
         .args(Bytes::from(lock_args.as_bytes().to_vec()).pack())
         .build()
 }
