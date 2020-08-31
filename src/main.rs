@@ -17,7 +17,7 @@ use ckb_types::{
     H160, H256,
 };
 
-use ckb_crypto::secp::Privkey;
+use ckb_crypto::secp::{Privkey, SECP256K1};
 use ckb_hash::{blake2b_256, new_blake2b};
 
 
@@ -73,17 +73,13 @@ pub fn get_tx(price:&f64) -> packed::Transaction {
         .build();
     let mut inputs = vec![input];
 
-
-    let output_lock_code_hash = "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8";
-    let mut output_lockscript_bytes = [0u8; 20];
-    hex_decode(&output_lock_code_hash.as_bytes()[2..], &mut output_lockscript_bytes)
-        .expect("hex decode privkey_hex error");
-    let output_lockscript = gen_lockscript(std::convert::From::from(output_lockscript_bytes));
+    let lock_args = gen_lock_args(h256!("0x4ddd5d32e1ee8bed83360fac2f70b03a6e4378b2"));
+    let lock_script = gen_lockscript(lock_args);
 
     // cell output
     let output = packed::CellOutput::new_builder()
         .capacity(CELL_CAPACITY.pack())
-        .lock(output_lockscript.into())
+        .lock(lock_script.into())
         .build();
     let mut outputs = vec![output];
 
@@ -165,4 +161,13 @@ pub fn gen_lockscript(lock_args: H160) -> packed::Script {
         .hash_type(ScriptHashType::Type.into())
         .args(Bytes::from(lock_args.as_bytes().to_vec()).pack())
         .build()
+}
+
+pub fn gen_lock_args(privkey_key: H256) -> H160 {
+    let privkey = secp256k1::SecretKey::from_slice(privkey_key.as_bytes()).unwrap();
+    let pubkey = secp256k1::PublicKey::from_secret_key(&SECP256K1, &privkey);
+
+    let lock_arg = H160::from_slice(&blake2b_256(&pubkey.serialize()[..])[0..20])
+        .expect("Generate hash(H160) from pubkey failed");
+    lock_arg
 }
