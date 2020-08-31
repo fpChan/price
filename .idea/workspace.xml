@@ -13,7 +13,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5d4fa0c2-e093-41e7-aa78-b6796e026d10" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -41,6 +41,15 @@
     <property name="cf.first.check.clang-format" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
+    <property name="org.rust.disableDetachedFileInspectionD:/Work/Rust/price/src/main.rs" value="true" />
+    <property name="settings.editor.selected.configurable" value="language.rust" />
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
@@ -55,7 +64,8 @@
       <option name="presentableId" value="Default" />
       <updated>1598841661404</updated>
       <workItem from="1598841662525" duration="1438000" />
-      <workItem from="1598853966490" duration="31000" />
+      <workItem from="1598853966490" duration="455000" />
+      <workItem from="1598854437224" duration="5316000" />
     </task>
     <task id="LOCAL-00001" summary="add txs">
       <created>1598841755784</created>
@@ -64,7 +74,14 @@
       <option name="project" value="LOCAL" />
       <updated>1598841755784</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="add cell_dep">
+      <created>1598856707121</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1598856707121</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -72,20 +89,25 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="add txs" />
-    <option name="LAST_COMMIT_MESSAGE" value="add txs" />
+    <MESSAGE value="add cell_dep" />
+    <option name="LAST_COMMIT_MESSAGE" value="add cell_dep" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="331" y="24" key="CommitChangelistDialog2" timestamp="1598841754894">
+    <state x="662" y="1" key="CommitChangelistDialog2" timestamp="1598856705611">
       <screen x="0" y="0" width="1463" height="914" />
     </state>
-    <state x="331" y="24" key="CommitChangelistDialog2/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598841754894" />
-    <state x="512" y="212" key="FileChooserDialogImpl" timestamp="1598841674432">
+    <state x="662" y="1" key="CommitChangelistDialog2/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598856705611" />
+    <state x="512" y="212" key="FileChooserDialogImpl" timestamp="1598854423241">
       <screen x="0" y="0" width="1463" height="914" />
     </state>
-    <state x="512" y="212" key="FileChooserDialogImpl/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598841674432" />
-    <state x="324" y="190" key="Vcs.Push.Dialog.v2" timestamp="1598841925042">
+    <state x="512" y="212" key="FileChooserDialogImpl/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598854423241" />
+    <state x="233" y="101" key="SettingsEditor" timestamp="1598854315031">
       <screen x="0" y="0" width="1463" height="914" />
     </state>
-    <state x="324" y="190" key="Vcs.Push.Dialog.v2/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598841925042" />
+    <state x="233" y="101" key="SettingsEditor/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598854315031" />
+    <state x="324" y="190" key="Vcs.Push.Dialog.v2" timestamp="1598856722012">
+      <screen x="0" y="0" width="1463" height="914" />
+    </state>
+    <state x="324" y="190" key="Vcs.Push.Dialog.v2/0.0.1463.914/-2560.161.2048.1152@0.0.1463.914" timestamp="1598856722012" />
   </component>
 </project>

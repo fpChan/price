@@ -5,8 +5,9 @@ use reqwest::Error;
 
 use ckb_sdk::{
     constants::{SIGHASH_TYPE_HASH},
-    wallet::DerivationPath, HttpRpcClient, SignerFn, TxHelper,
+    wallet::DerivationPath, HttpRpcClient, SignerFn, TxHelper,GenesisInfo,
 };
+use ckb_types::core::BlockView;
 
 use ckb_types::{
     bytes::Bytes,
@@ -22,7 +23,8 @@ use ckb_hash::{blake2b_256, new_blake2b};
 
 
 use faster_hex::{hex_decode};
-use ckb_types::packed::CellDep;
+use ckb_types::packed::{CellDep, OutPoint};
+use ckb_types::core::DepType;
 
 
 const SIGNATURE_SIZE: usize = 65;
@@ -49,19 +51,19 @@ async fn main() -> Result<(), Error> {
     //  CKB RPC client
     let mut rpc_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
 
-    // let mut helper = TxHelper::default();
-
     let tx = get_tx(price);
     let tx_hash = rpc_client.send_transaction(tx).map_err(|err| format!("Send transaction error: {}", err)).unwrap();
-    println!("{:?}",tx_hash);
+    println!("hash result : {:?}",tx_hash.to_string());
 
     Ok(())
 }
 
-
 pub fn get_tx(price:&f64) -> packed::Transaction {
 
-    let input_tx_hash = h256!("0x22048803dae600f56ffb95a340788d3131676005d8bdd0546653b338afd7e785");
+    let mut ckb_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
+
+    // input tx hash
+    let input_tx_hash = h256!("0xcd866808ba9f51a0363f424d217f9fc842b3d95c14460880e3e41b41642bd327");
 
     let cell_input = packed::OutPoint::new_builder()
         .tx_hash(input_tx_hash.pack())
@@ -87,8 +89,18 @@ pub fn get_tx(price:&f64) -> packed::Transaction {
     // outputs_data: the price of ckb
     let mut outputs_data: Vec<Bytes> = vec![Bytes::from(price.to_string())];
 
-    let secp256_dep: packed::CellDep = CellDep::default();
-    
+    let block: BlockView = ckb_client
+        .get_block_by_number(0)
+        .expect("get genesis block failed from ckb")
+        .expect("genesis block is none")
+        .into();
+
+    let ckb_genesis_info =
+        GenesisInfo::from_block(&block).expect("ckb genesisInfo generated failed");
+
+
+    let secp256_dep: packed::CellDep =  ckb_genesis_info.sighash_dep();
+
     // build transaction
     let tx = TransactionBuilder::default()
         .inputs(inputs)
@@ -156,7 +168,6 @@ pub fn sign_tx(tx: ckb_types::core::TransactionView, key: &Privkey) -> Transacti
         .set_witnesses(signed_witnesses)
         .build()
 }
-
 
 pub fn gen_lockscript(lock_args: H160) -> packed::Script {
     packed::Script::new_builder()
