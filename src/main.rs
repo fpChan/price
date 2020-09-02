@@ -5,7 +5,7 @@ use reqwest::Error;
 
 use ckb_sdk::{
     constants::{SIGHASH_TYPE_HASH},
-    HttpRpcClient,
+    HttpRpcClient,GenesisInfo,
 };
 use ckb_types::core::BlockView;
 
@@ -18,17 +18,16 @@ use ckb_types::{
     H160, H256,
 };
 
-use ckb_crypto::secp::{Privkey, SECP256K1};
-use ckb_hash::{blake2b_256, new_blake2b};
+use ckb_crypto::secp::{Privkey};
+use ckb_hash::{new_blake2b};
 
 
 use faster_hex::{hex_decode};
-use ckb_types::packed::{CellDep, OutPoint, CellOutput, Byte32};
-use ckb_types::core::DepType;
 
 
 const SIGNATURE_SIZE: usize = 65;
-const CELL_CAPACITY: u64 = 16 * 100000000 + 14000000000;
+const CELL_CAPACITY: u64 = 280 * 100000000 ;
+
 /*
 account config
   address:
@@ -58,72 +57,62 @@ struct Res {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let request_url = String::from("https://widgets.coinmarketcap.com/v2/ticker/4948/");
-    let mut input_hash = "0x6f2321befe738192959de2f64e6827b2c3afc978ae4889ce5383776fe87f4cae";
+    let mut input_hash = h256!("0x424133739d5e47597ba25d7d46323f546d25f6518129bd3d74b65bb4de5e1e8b");
+    let mut i: u64  = 1;
+    while i < 10 {
+        // get price
+        let  response: Res = reqwest::get(&request_url).await?.json().await?;
+        let  price = response.data.quotes.get("USD").unwrap().get("price").unwrap();
+        println!("price: {:?}", price.clone());
 
-    // get price
-    let response: Res = reqwest::get(&request_url).await?.json().await?;
-    let price = response.data.quotes.get("USD").unwrap().get("price").unwrap();
-    println!("price: {:?}", price);
+        //  CKB RPC client
+        let mut rpc_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
 
-    //  CKB RPC client
-    let mut rpc_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
+        let tx = get_tx(price, CELL_CAPACITY-i*10000000,input_hash);
+        input_hash = rpc_client.send_transaction(tx).map_err(|err| format!("Send transaction error: {}", err)).unwrap();
+        println!("hash result 1 : {:?}", input_hash.clone().to_string());
 
-    let tx = get_tx(price, input_hash.to_owned().clone());
-    let tx_hash = rpc_client.send_transaction(tx).map_err(|err| format!("Send transaction error: {}", err)).unwrap();
-    println!("hash result 1 : {:?}", tx_hash.to_string());
-
-
+        i += 1;
+    }
     Ok(())
 }
 
-pub fn get_tx(price: &f64, input_tx_hash: String) -> packed::Transaction {
+pub fn get_tx(price: &f64, capacity: u64, input_tx_hash: H256) -> packed::Transaction {
     let mut ckb_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
 
-
-    println!("the parpms : {}", input_tx_hash.clone());
-    // let input_tx_hash = h256!("0x6f2321befe738192959de2f64e6827b2c3afc978ae4889ce5383776fe87f4cae");
-    let tx_hash = input_tx_hash.clone();
-
-    let mut tx_hash_bytes = [0u8; 32];
-    hex_decode(&tx_hash.as_bytes(), &mut tx_hash_bytes);
-
-
+    // let input_tx_hash = h256!("0xc610fa6abaeecbe54147683eb15f677b1ff27314230de21bc56862e62c71670f");
     let cell_input = packed::OutPoint::new_builder()
-        .tx_hash(H256::from(tx_hash_bytes).pack())
+        .tx_hash(input_tx_hash.pack())
         .index(0u32.pack())
         .build();
 
     // cell input
     let input = packed::CellInput::new_builder()
-        .previous_output(cell_input.clone())
+        .previous_output(cell_input)
         .build();
-    let mut inputs = vec![input];
+    let  inputs = vec![input];
 
     let lock_script = gen_lockscript();
 
     // cell output
     let output = packed::CellOutput::new_builder()
-        .capacity(CELL_CAPACITY.pack())
+        .capacity(capacity.pack())
         .lock(lock_script.into())
         .build();
-    let mut outputs = vec![output];
+    let  outputs = vec![output];
 
     // outputs_data: the price of ckb
-    let mut outputs_data: Vec<Bytes> = vec![Bytes::from(price.to_string())];
+    let  outputs_data: Vec<Bytes> = vec![Bytes::from(price.to_string())];
 
-    // let block: BlockView = ckb_client
-    //     .get_block_by_number(0)
-    //     .expect("get genesis block failed from ckb")
-    //     .expect("genesis block is none")
-    //     .into();
-    // let ckb_genesis_info =
-    //     GenesisInfo::from_block(&block).expect("ckb genesisInfo generated failed");
-    // let secp256_dep: packed::CellDep =  ckb_genesis_info.sighash_dep();
+    let block: BlockView = ckb_client
+        .get_block_by_number(0)
+        .expect("get genesis block failed from ckb")
+        .expect("genesis block is none")
+        .into();
+    let ckb_genesis_info =
+        GenesisInfo::from_block(&block).expect("ckb genesisInfo generated failed");
+    let secp256_dep: packed::CellDep =  ckb_genesis_info.sighash_dep();
 
-    let secp256_dep: packed::CellDep = CellDep::new_builder()
-        .out_point(cell_input.clone())
-        .dep_type(DepType::DepGroup.into())
-        .build();
     // build transaction
     let tx = TransactionBuilder::default()
         .inputs(inputs)
@@ -143,7 +132,6 @@ pub fn get_tx(price: &f64, input_tx_hash: String) -> packed::Transaction {
 
     tx.data()
 }
-
 
 pub fn sign_tx(tx: ckb_types::core::TransactionView, key: &Privkey) -> TransactionView {
     let witnesses_len = tx.witnesses().len();
@@ -196,7 +184,7 @@ pub fn sign_tx(tx: ckb_types::core::TransactionView, key: &Privkey) -> Transacti
 pub fn gen_lockscript() -> packed::Script {
     packed::Script::new_builder()
         .code_hash(SIGHASH_TYPE_HASH.pack())
-        .hash_type(ScriptHashType::Data.into())
+        .hash_type(ScriptHashType::Type.into())
         .args(Bytes::from(h160!("0x4ddd5d32e1ee8bed83360fac2f70b03a6e4378b2").as_ref()).pack())
         .build()
 }
