@@ -2,6 +2,7 @@ use std::collections::{HashMap};
 use reqwest;
 use serde::Deserialize;
 use reqwest::Error;
+use std::ops::{Div, Mul, Add};
 
 use ckb_sdk::{
     constants::{SIGHASH_TYPE_HASH},
@@ -20,13 +21,10 @@ use ckb_types::{
 
 use ckb_crypto::secp::{Privkey};
 use ckb_hash::{new_blake2b};
-
-
 use faster_hex::{hex_decode};
 
-
 const SIGNATURE_SIZE: usize = 65;
-const CELL_CAPACITY: u64 = 280 * 100000000 ;
+const CELL_CAPACITY: u64 = 240 * 100000000 ;
 
 /*
 account config
@@ -54,30 +52,40 @@ struct Res {
     data: Data,
 }
 
+
+async fn get_price_by_cmc(url: &String) -> Result<u128, Error> {
+    let ckb_resp: Res = reqwest::get(&format!("{}{}",url,"/4948/")).await?.json().await?;
+    let ckb_price = ckb_resp.data.quotes.get("USD").unwrap().get("price").unwrap().clone();
+    let eth_resp :Res = reqwest::get(&format!("{}{}",url,"/1027/")).await?.json().await?;
+    let eth_price = eth_resp.data.quotes.get("USD").unwrap().get("price").unwrap().clone();
+    let base: f64 = 10 as f64;
+    // println!("ckb : {:?}, eth :{:?}", ckb,eth);
+    Ok(ckb_price.mul(base.powf(18 as f64)).div(eth_price) as u128)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let request_url = String::from("https://widgets.coinmarketcap.com/v2/ticker/4948/");
-    let mut input_hash = h256!("0x424133739d5e47597ba25d7d46323f546d25f6518129bd3d74b65bb4de5e1e8b");
+    let request_url = String::from("https://widgets.coinmarketcap.com/v2/ticker");
+    let mut input_hash = h256!("0xc26694c6d2e76e9e89899369c6756be708d00249499b207f380b355057008b99");
     let mut i: u64  = 1;
-    while i < 10 {
+    while i < 100000 {
         // get price
-        let  response: Res = reqwest::get(&request_url).await?.json().await?;
-        let  price = response.data.quotes.get("USD").unwrap().get("price").unwrap();
+        let  price = get_price_by_cmc(&request_url).await.unwrap();
+
         println!("price: {:?}", price.clone());
 
         //  CKB RPC client
         let mut rpc_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
 
-        let tx = get_tx(price, CELL_CAPACITY-i*10000000,input_hash);
+        let tx = get_tx(&price, CELL_CAPACITY-i*10000000, input_hash);
         input_hash = rpc_client.send_transaction(tx).map_err(|err| format!("Send transaction error: {}", err)).unwrap();
-        println!("hash result 1 : {:?}", input_hash.clone().to_string());
-
+        println!("hash result i : {:?}", input_hash.clone().to_string());
         i += 1;
     }
     Ok(())
 }
 
-pub fn get_tx(price: &f64, capacity: u64, input_tx_hash: H256) -> packed::Transaction {
+pub fn get_tx(price: &u128, capacity: u64, input_tx_hash: H256) -> packed::Transaction {
     let mut ckb_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
 
     // let input_tx_hash = h256!("0xc610fa6abaeecbe54147683eb15f677b1ff27314230de21bc56862e62c71670f");
@@ -188,3 +196,4 @@ pub fn gen_lockscript() -> packed::Script {
         .args(Bytes::from(h160!("0x4ddd5d32e1ee8bed83360fac2f70b03a6e4378b2").as_ref()).pack())
         .build()
 }
+
