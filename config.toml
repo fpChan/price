@@ -1,0 +1,4 @@
+lock_arg="0x4ddd5d32e1ee8bed83360fac2f70b03a6e4378b2"
+private_key="0x0b008309faea434378cdfcdb36f3c21e477406af29d224edfcb3576ce348f56c"
+input_tx_hash="0xca84b34c089bbc0a0495e41b4522ace8bc63bca2bd9ed91c7cebe256f81f2426"
+fee_shannons=1000000000

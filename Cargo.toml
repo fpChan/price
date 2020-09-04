@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rand = "0.5.5"
+# network request
+async-trait = "0.1.40"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
 tokio = { version = "0.2", features = ["full"] }
 async-std = { version = "1.2.0", features = ["attributes"] }
@@ -36,3 +37,7 @@ jsonrpc-core = "14.0"
 # ckb-indexer = { git = "https://github.com/cosinlink/ckb-indexer", rev = "065aeee" }
 failure = "0.1.5"
 config = "0.9"
+
+# toml config
+toml = "0.5.6"
+serde_derive = "1.0.115"
