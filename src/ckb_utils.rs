@@ -14,6 +14,7 @@ use ckb_types::{
 
 use ckb_crypto::secp::{Privkey, SECP256K1};
 use ckb_hash::{new_blake2b,blake2b_256};
+use ckb_sdk::rpc::Capacity;
 
 const SIGNATURE_SIZE: usize = 65;
 
@@ -152,4 +153,10 @@ fn merge_u128(first: u128, second: u128) -> Vec<u8> {
     }
 
     result
+}
+
+pub fn get_cell_first_capacity (tx_hash :H256) -> u64 {
+    let mut ckb_client = HttpRpcClient::new(String::from("http://127.0.0.1:8114"));
+    let e = ckb_client.get_transaction(tx_hash.clone()).unwrap().unwrap();
+    e.transaction.inner.outputs.get(0).unwrap().capacity.0
 }

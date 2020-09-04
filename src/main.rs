@@ -4,7 +4,7 @@ mod price;
 
 
 use crate::config::load_price_config;
-use crate::ckb_utils::{ send_tx};
+use crate::ckb_utils::{send_tx, get_cell_first_capacity};
 use reqwest::Error;
 use crate::price::{CoinMarketCap, Exchange};
 
@@ -17,8 +17,9 @@ async fn main() -> Result<(),Error> {
 
     let fee = ckb_config.fee_shannons;
     let mut input_hash = ckb_config.input_tx_hash;
-    let loop_times = 20;
-    let genesis_capacity: u64 = loop_times * fee ;
+    let genesis_capacity= get_cell_first_capacity(input_hash.clone()) ;
+    println!("genesis_capacity : {}",genesis_capacity);
+    let loop_times = genesis_capacity /fee;
     let mut i: u64  = 1;
 
     while i < loop_times {
